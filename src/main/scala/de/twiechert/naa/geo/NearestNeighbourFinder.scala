@@ -2,28 +2,18 @@ package de.twiechert.naa.geo
 
 import java.io.FileInputStream
 import java.util.zip.GZIPInputStream
-
 import de.twiechert.naa.config.Params
 import de.twiechert.naa.geo.NaiveNearestNeighbourFinder.AirportTriplet
-import jsat.linear.distancemetrics.DistanceMetric
-import jsat.linear.{Vec, vectorcollection}
+import jsat.linear.Vec
 import jsat.linear.vectorcollection.BallTree
 import jsat.linear.vectorcollection.BallTree.{ConstructionMethod, PivotSelection}
 
 import scala.io.Source
 
+/**
+  * Trait for implementations that find the closest neighboring airport.
+  */
 trait NearestNeighbourFinder {
-
-  /**
-    * This method returns for an Array of positions reports the respective array
-    * of closest airports.
-    *
-    * @param coordinates the array of location reports to return the closest airports each
-    * @return the array of closest airports
-    */
-  def find(coordinates: Array[(String, Double, Double)]): Array[(String, String)] = {
-    for (coordinatePair <- coordinates) yield this.find(coordinatePair)
-  }
 
   /**
     * This method returns for a single positions report the respective closest airport.
@@ -52,24 +42,23 @@ object SpatialIndexBasedNearestNeighbourFinder extends NearestNeighbourFinder {
     val bufferedSource = new GZIPInputStream(new FileInputStream(Params.AirportDataPath))
     var firstLine = true
     // insert into tree
-    for (line <- Source.fromInputStream(bufferedSource).getLines())
-    {
-      if(!( firstLine | {firstLine = false; false })) {
+    for (line <- Source.fromInputStream(bufferedSource).getLines()) {
+      if (!(firstLine | {
+        firstLine = false; false
+      })) {
         val cols = line.split(",").map(_.trim)
         // insert data to tree
         balltree.insert(new AirportTriplet(cols(0), cols(1).toDouble, cols(2).toDouble))
       }
     }
 
-
     balltree
   }
-
 
   override def find(locationReportCoordinates: (String, Double, Double)): (String, String) = {
     // tree.findNearest((coordinates), 1)
     val result = balltree.search(new AirportTriplet(locationReportCoordinates), 1).get(0).getVector
-    (locationReportCoordinates._1, result.aiportIdentifier)
+    (locationReportCoordinates._1, result.airportIdentifier)
 
   }
 }
@@ -81,49 +70,48 @@ object SpatialIndexBasedNearestNeighbourFinder extends NearestNeighbourFinder {
   */
 object NaiveNearestNeighbourFinder extends NearestNeighbourFinder {
 
-  var airportLocations: List[(String, Double, Double)] = setup()
+  val airportLocations: List[(String, Double, Double)] = setup()
 
   override def find(locationReportCoordinates: (String, Double, Double)): (String, String) = {
-
-
-    var minDistanceAirport = this.airportLocations.map(airPortlocation =>
-      (airPortlocation._1, GeoUtil.haversineDistance(airPortlocation, locationReportCoordinates))
+    val minDistanceAirport = this.airportLocations.map(airPortlocation =>
+      (airPortlocation._1, HaversineDistance.haversineDistance(airPortlocation, locationReportCoordinates))
     ).minBy(distanceTuple => distanceTuple._2)
-
-    val ret = (locationReportCoordinates._1, minDistanceAirport._1)
-
-    ret
+    (locationReportCoordinates._1, minDistanceAirport._1)
   }
 
-
   /**
-    * Sets this implementation up, i.e. makes the
+    * Sets this implementation up, i.e. makes the airport locations available in-memory
     *
-    * @return
+    * @return the setup lists of airport locations
     */
   def setup(): List[(String, Double, Double)] = {
     val bufferedSource = new GZIPInputStream(new FileInputStream(Params.AirportDataPath))
     var firstLine = true
 
-    val airportLocations = (for (line <- Source.fromInputStream(bufferedSource).getLines(); if {
-      var c = firstLine; firstLine = false; !c
-    }) yield {
+    val airportLocations = (for (line <- Source.fromInputStream(bufferedSource).getLines(); if !(firstLine | {
+        firstLine = false; false
+    })) yield {
       val cols = line.split(",").map(_.trim)
       (cols(0), cols(1).toDouble, cols(2).toDouble)
     }).toList
 
-    bufferedSource.close
+    bufferedSource.close()
     airportLocations
   }
 
 
-  class AirportTriplet(var aiportIdentifier: String, var latitude: Double, var longitude: Double) extends Vec {
-
+  /**
+    * This class is needed, since the Balltree implementation requires an object of type Vec.
+    *
+    * @param airportIdentifier the three digit airport identifier or null
+    * @param latitude          the reference object's latitude
+    * @param longitude         the reference object's longitude
+    */
+  class AirportTriplet(var airportIdentifier: String, var latitude: Double, var longitude: Double) extends Vec {
 
     def this(coordinates: (String, Double, Double)) {
-      this(coordinates._1, coordinates._2, coordinates._3);
+      this(null, coordinates._2, coordinates._3)
     }
-
 
     override def length(): Int = 2
 
@@ -133,17 +121,12 @@ object NaiveNearestNeighbourFinder extends NearestNeighbourFinder {
         case _ => this.longitude
       }
 
-    override def set(i: Int, v: Double) = {
-      // NOT SUPPORTED
-    }
+    override def set(i: Int, v: Double) = null
 
     override def isSparse: Boolean = false
 
     // not needed thus just copy
     override def clone: Vec = this
-
-
   }
-
 
 }

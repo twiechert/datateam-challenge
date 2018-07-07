@@ -3,7 +3,7 @@ package de.twiechert.naa.config
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import de.twiechert.naa.geo.{NaiveNearestNeighbourFinder, SpatialIndexBasedNearestNeighbourFinder}
+import de.twiechert.naa.geo.{NaiveNearestNeighbourFinder, BallTreeBasedNearestNeighbourFinder}
 
 object Params {
 
@@ -12,7 +12,7 @@ object Params {
   val OutputPath = "/home/twiechert/IdeaProjects/datateam-challenge/out"
   val DateOutputFormat =  new SimpleDateFormat("HH_mm_ss")
 
-  val NearestNeighbourFinder =  SpatialIndexBasedNearestNeighbourFinder // NaiveNearestNeighbourFinder
+  val NearestNeighbourFinder =  BallTreeBasedNearestNeighbourFinder // NaiveNearestNeighbourFinder
   def getOutputfilePath() = {
     val fileName =  DateOutputFormat.format(Calendar.getInstance().getTime())
     s"$OutputPath/$fileName"

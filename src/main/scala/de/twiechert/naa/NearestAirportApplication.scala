@@ -8,9 +8,7 @@ object NearestAirportApplication {
   val logger: Logger = LoggerFactory.getLogger(NearestAirportApplication.getClass)
 
   def main(args: Array[String]): Unit = {
-    var streamBuilder = new NearestAirportStreamBuilder()
-    logger.info("Starting Stream Application")
-    streamBuilder.run()
+    new NearestAirportStreamBuilder().run()
   }
 
 }

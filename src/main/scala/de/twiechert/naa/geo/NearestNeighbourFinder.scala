@@ -29,14 +29,14 @@ trait NearestNeighbourFinder {
   * This corresponds to the optimized version of the nearest neighbour finder that relies on spatial indexing.
   *
   */
-object SpatialIndexBasedNearestNeighbourFinder extends NearestNeighbourFinder {
+object BallTreeBasedNearestNeighbourFinder extends NearestNeighbourFinder {
 
 
-  val balltree: BallTree[AirportTriplet] = setup()
+  val ballTree: BallTree[AirportTriplet] = setup()
 
   def setup(): BallTree[AirportTriplet] = {
     // create a ball tree with Haversine distance metric
-    val balltree = new BallTree[AirportTriplet](new HaversineDistance(), ConstructionMethod.TOP_DOWN_FARTHEST, PivotSelection.MEDOID)
+    val ballTree = new BallTree[AirportTriplet](new HaversineDistance(), ConstructionMethod.TOP_DOWN_FARTHEST, PivotSelection.MEDOID)
 
     // read data
     val bufferedSource = new GZIPInputStream(new FileInputStream(Params.AirportDataPath))
@@ -48,16 +48,15 @@ object SpatialIndexBasedNearestNeighbourFinder extends NearestNeighbourFinder {
       })) {
         val cols = line.split(",").map(_.trim)
         // insert data to tree
-        balltree.insert(new AirportTriplet(cols(0), cols(1).toDouble, cols(2).toDouble))
+        ballTree.insert(new AirportTriplet(cols(0), cols(1).toDouble, cols(2).toDouble))
       }
     }
-
-    balltree
+    ballTree
   }
 
   override def find(locationReportCoordinates: (String, Double, Double)): (String, String) = {
     // tree.findNearest((coordinates), 1)
-    val result = balltree.search(new AirportTriplet(locationReportCoordinates), 1).get(0).getVector
+    val result = ballTree.search(new AirportTriplet(locationReportCoordinates), 1).get(0).getVector
     (locationReportCoordinates._1, result.airportIdentifier)
 
   }

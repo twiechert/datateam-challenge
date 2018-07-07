@@ -6,16 +6,18 @@ import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironm
 import org.apache.flink.streaming.api.scala._
 
 /**
-  * This stream application processed the following steps
-  * - reading the location report stream from the import stream
-  * - it is NOT necessary to key the stream since elements are independent and the type of
-  * distribution across cluster is not relevant
+  * This stream application processedsthe following steps:
+  * - reading the location report stream from the provided csv file
+  * (it is NOT necessary to key the stream since elements are independent and the type of distribution across cluster is not relevant)
+  * - determines for every input event the respective closest airport
   */
 class NearestAirportStreamBuilder {
 
 
   def run() = {
     // local / embedded execution environment
+    logger.info("Starting Stream Application")
+
     val env = StreamExecutionEnvironment.createLocalEnvironment()
 
     // Path to the airport data, read from HDFS in real world; map to triplet (UserId, Latitude, Longitude)
@@ -31,7 +33,6 @@ class NearestAirportStreamBuilder {
     closestAirportStream.writeAsCsv(Params.getOutputfilePath())
     env.execute()
     logger.info("Stream Execution Ended")
-
   }
 
 }

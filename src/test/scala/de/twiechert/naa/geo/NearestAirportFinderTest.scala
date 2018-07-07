@@ -4,7 +4,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class NearestAirportFinderTest extends FlatSpec with Matchers {
 
-  "NaiveNearestNeighbourFinder and SpatialIndexBasedNearestNeighbourFinder" should "return the nearest neighbour airports.." in {
+  "NaiveNearestNeighbourFinder and BallTreeBasedNearestNeighbourFinder" should "return the nearest neighbour airports.." in {
 
     val positionReports = Seq(
       ("tu_berlin_position_guid", 52.5166257, 13.323462),
@@ -19,7 +19,7 @@ class NearestAirportFinderTest extends FlatSpec with Matchers {
 
     )
 
-    for(finder <- Seq(NaiveNearestNeighbourFinder, SpatialIndexBasedNearestNeighbourFinder)) {
+    for(finder <- Seq(NaiveNearestNeighbourFinder, BallTreeBasedNearestNeighbourFinder)) {
       val calculatedReports = positionReports.map(positionReport => finder.find(positionReport))
       calculatedReports shouldEqual expedtedResults
     }

@@ -2,7 +2,7 @@
 - the coordinates are WSG84, this projection is not based on euclidean distance, thus we cannot use techniques that rely on this metric
 - the number of airports is small and finite compared to the location reports
 - because of that it does not seem useful to shard the airport across the keyspace
-- instead, data is made available on any cluster
+- instead, data is made available on any node
 - to improve access latency we prefer memory access and try to avoid accessing some remote machine
 - the naive approach has complexity n, i.e. for every location report we would have to scan all airports to find the closest match
 - thus, we build a  Balltree [1] in advance. This tree allows access on average in log(n).
